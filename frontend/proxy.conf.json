@@ -1,0 +1,13 @@
+{
+  "/rooms": {
+    "target": "http://localhost:8080",
+    "secure": false,
+    "ws": true,
+    "changeOrigin": true
+  },
+  "/healthz": {
+    "target": "http://localhost:8080",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

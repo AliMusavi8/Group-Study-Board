@@ -1,0 +1,268 @@
+import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { WsService, ClientStrokeEvent, Point, ServerMessage, StrokeEvent } from './ws.service';
+
+const CANVAS_BG = '#f5f1e8';
+
+type Tool = 'pen' | 'eraser';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.css'
+})
+export class AppComponent implements OnInit, AfterViewInit {
+  @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
+
+  roomInput = '';
+  roomId = '';
+  status = 'disconnected';
+
+  color = '#1f2937';
+  thickness = 3;
+  tool: Tool = 'pen';
+
+  private ctx?: CanvasRenderingContext2D;
+  private drawing = false;
+  private lastPoint?: Point;
+  private lastPointByClient = new Map<string, Point>();
+  private clientId = this.createClientId();
+
+  constructor(private ws: WsService) {
+    this.ws.onMessage((msg) => this.handleServerMessage(msg));
+  }
+
+  ngOnInit(): void {
+    const urlRoom = this.getRoomFromUrl();
+    if (urlRoom) {
+      this.roomInput = urlRoom;
+    }
+  }
+
+  ngAfterViewInit(): void {
+    const canvas = this.canvasRef.nativeElement;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return;
+    }
+    this.ctx = ctx;
+    this.resizeCanvas();
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.resizeCanvas();
+  }
+
+  async createRoom(): Promise<void> {
+    try {
+      this.status = 'creating';
+      const roomId = await this.ws.createRoom();
+      this.roomInput = roomId;
+      await this.joinRoom();
+    } catch {
+      this.status = 'error';
+    }
+  }
+
+  async joinRoom(): Promise<void> {
+    const roomId = this.roomInput.trim();
+    if (!roomId) {
+      return;
+    }
+    try {
+      this.status = 'connecting';
+      await this.ws.connect(roomId, this.clientId);
+      this.roomId = roomId;
+      this.status = 'connected';
+      this.setRoomInUrl(roomId);
+    } catch {
+      this.status = 'error';
+    }
+  }
+
+  async copyShareLink(): Promise<void> {
+    if (!this.roomId) {
+      return;
+    }
+    const link = `${window.location.origin}?room=${this.roomId}`;
+    try {
+      await navigator.clipboard.writeText(link);
+    } catch {
+      // Ignore clipboard failures
+    }
+  }
+
+  onPointerDown(event: PointerEvent): void {
+    if (!this.ctx || !this.roomId) {
+      return;
+    }
+    this.drawing = true;
+    const point = this.getPoint(event);
+    this.lastPoint = point;
+    this.drawPoint(point, this.getStrokeColor());
+    this.sendEvent({ type: 'strokeStart', point });
+  }
+
+  onPointerMove(event: PointerEvent): void {
+    if (!this.drawing || !this.ctx || !this.roomId || !this.lastPoint) {
+      return;
+    }
+    const point = this.getPoint(event);
+    this.drawLine(this.lastPoint, point, this.getStrokeColor(), this.thickness);
+    this.lastPoint = point;
+    this.sendEvent({ type: 'strokeMove', point });
+  }
+
+  onPointerUp(): void {
+    if (!this.drawing) {
+      return;
+    }
+    this.drawing = false;
+    this.lastPoint = undefined;
+    this.sendEvent({ type: 'strokeEnd' });
+  }
+
+  private handleServerMessage(message: ServerMessage): void {
+    if (!this.ctx) {
+      return;
+    }
+    if (message.type === 'snapshot') {
+      this.clearCanvas();
+      if (message.snapshot?.events?.length) {
+        message.snapshot.events.forEach((ev) => this.replayEvent(ev));
+      }
+      if (message.events?.length) {
+        message.events.forEach((ev) => this.replayEvent(ev));
+      }
+      return;
+    }
+
+    if (message.type === 'event') {
+      this.replayEvent(message.event);
+    }
+  }
+
+  private replayEvent(event: StrokeEvent): void {
+    if (!this.ctx) {
+      return;
+    }
+    if (event.clientId === this.clientId) {
+      return;
+    }
+
+    const color = event.tool === 'eraser' ? CANVAS_BG : (event.color || this.color);
+    const thickness = event.thickness || this.thickness;
+
+    if (event.type === 'strokeStart' && event.point) {
+      this.lastPointByClient.set(event.clientId, event.point);
+      this.drawPoint(event.point, color, thickness);
+      return;
+    }
+
+    if (event.type === 'strokeMove' && event.point) {
+      const last = this.lastPointByClient.get(event.clientId);
+      if (last) {
+        this.drawLine(last, event.point, color, thickness);
+      }
+      this.lastPointByClient.set(event.clientId, event.point);
+      return;
+    }
+
+    if (event.type === 'strokeEnd') {
+      this.lastPointByClient.delete(event.clientId);
+    }
+  }
+
+  private sendEvent(event: ClientStrokeEvent): void {
+    const payload: ClientStrokeEvent = {
+      ...event,
+      color: this.color,
+      thickness: this.thickness,
+      tool: this.tool
+    };
+    this.ws.send(payload);
+  }
+
+  private drawLine(from: Point, to: Point, color: string, thickness: number): void {
+    if (!this.ctx) {
+      return;
+    }
+    this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = thickness;
+    this.ctx.lineCap = 'round';
+    this.ctx.lineJoin = 'round';
+    this.ctx.beginPath();
+    this.ctx.moveTo(from.x, from.y);
+    this.ctx.lineTo(to.x, to.y);
+    this.ctx.stroke();
+  }
+
+  private drawPoint(point: Point, color: string, thickness = this.thickness): void {
+    if (!this.ctx) {
+      return;
+    }
+    this.ctx.fillStyle = color;
+    this.ctx.beginPath();
+    this.ctx.arc(point.x, point.y, thickness / 2, 0, Math.PI * 2);
+    this.ctx.fill();
+  }
+
+  private getPoint(event: PointerEvent): Point {
+    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top
+    };
+  }
+
+  private resizeCanvas(): void {
+    const canvas = this.canvasRef.nativeElement;
+    const rect = canvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    canvas.width = rect.width * ratio;
+    canvas.height = rect.height * ratio;
+    if (!this.ctx) {
+      return;
+    }
+    this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    this.clearCanvas();
+  }
+
+  private clearCanvas(): void {
+    if (!this.ctx) {
+      return;
+    }
+    const canvas = this.canvasRef.nativeElement;
+    const rect = canvas.getBoundingClientRect();
+    this.ctx.clearRect(0, 0, rect.width, rect.height);
+    this.ctx.fillStyle = CANVAS_BG;
+    this.ctx.fillRect(0, 0, rect.width, rect.height);
+  }
+
+  private getStrokeColor(): string {
+    return this.tool === 'eraser' ? CANVAS_BG : this.color;
+  }
+
+  private createClientId(): string {
+    if (crypto && 'randomUUID' in crypto) {
+      return crypto.randomUUID();
+    }
+    return `guest-${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  private getRoomFromUrl(): string | null {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('room');
+  }
+
+  private setRoomInUrl(roomId: string): void {
+    const params = new URLSearchParams(window.location.search);
+    params.set('room', roomId);
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+  }
+}

@@ -1,0 +1,97 @@
+<div class="min-h-screen flex flex-col">
+  <header class="px-6 pt-6 pb-4">
+    <div class="max-w-6xl mx-auto flex flex-col gap-4">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-semibold tracking-tight text-ink">Group Study Board</h1>
+          <p class="text-sm text-slate-500">Real-time whiteboard for focused group sessions.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs uppercase tracking-wide text-slate-500">Status</span>
+          <span class="text-xs font-semibold px-2 py-1 rounded-full bg-white shadow-soft">
+            {{ status }}
+          </span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="bg-white/70 backdrop-blur rounded-2xl p-4 shadow-soft flex flex-col gap-3">
+          <label class="text-xs uppercase tracking-wide text-slate-500">Room</label>
+          <div class="flex flex-wrap gap-2">
+            <input
+              class="flex-1 min-w-[200px] rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember/40"
+              type="text"
+              placeholder="Enter room ID"
+              [(ngModel)]="roomInput"
+            />
+            <button
+              class="rounded-xl px-4 py-2 text-sm font-semibold bg-ember text-white shadow-soft hover:brightness-105"
+              (click)="joinRoom()"
+            >
+              Join
+            </button>
+            <button
+              class="rounded-xl px-4 py-2 text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50"
+              (click)="createRoom()"
+            >
+              Create
+            </button>
+          </div>
+          <div class="text-xs text-slate-500">
+            Current room: <span class="font-semibold text-ink">{{ roomId || 'none' }}</span>
+          </div>
+          <button
+            class="self-start text-xs font-semibold uppercase tracking-wide text-ember"
+            (click)="copyShareLink()"
+          >
+            Copy share link
+          </button>
+        </div>
+
+        <div class="bg-white/70 backdrop-blur rounded-2xl p-4 shadow-soft flex flex-col gap-3">
+          <label class="text-xs uppercase tracking-wide text-slate-500">Tools</label>
+          <div class="flex flex-wrap gap-4 items-center">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">Color</span>
+              <input type="color" [(ngModel)]="color" class="h-8 w-12 border border-slate-200 rounded" />
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm">Size</span>
+              <input type="range" min="1" max="12" [(ngModel)]="thickness" />
+              <span class="text-sm w-6 text-right">{{ thickness }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm">Tool</span>
+              <select [(ngModel)]="tool" class="rounded-lg border border-slate-200 px-2 py-1 text-sm">
+                <option value="pen">Pen</option>
+                <option value="eraser">Eraser</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white/70 backdrop-blur rounded-2xl p-4 shadow-soft flex flex-col gap-2">
+          <label class="text-xs uppercase tracking-wide text-slate-500">Notes</label>
+          <ul class="text-xs text-slate-500 list-disc list-inside">
+            <li>Rooms auto-expire after inactivity.</li>
+            <li>Server orders strokes before broadcast.</li>
+            <li>Share the room link to invite others.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 px-6 pb-8">
+    <div class="max-w-6xl mx-auto h-[70vh] bg-white/70 backdrop-blur rounded-3xl shadow-soft overflow-hidden border border-white/60">
+      <canvas
+        #canvas
+        class="w-full h-full touch-none"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp()"
+        (pointerleave)="onPointerUp()"
+      ></canvas>
+    </div>
+  </main>
+</div>
