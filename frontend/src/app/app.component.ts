@@ -30,6 +30,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   private lastPoint?: Point;
   private lastPointByClient = new Map<string, Point>();
   private clientId = this.createClientId();
+  private deviceScale = 1;
 
   constructor(private ws: WsService) {
     this.ws.onMessage((msg) => this.handleServerMessage(msg));
@@ -191,13 +192,14 @@ export class AppComponent implements OnInit, AfterViewInit {
     if (!this.ctx) {
       return;
     }
+    const scale = this.deviceScale;
     this.ctx.strokeStyle = color;
-    this.ctx.lineWidth = thickness;
+    this.ctx.lineWidth = thickness * scale;
     this.ctx.lineCap = 'round';
     this.ctx.lineJoin = 'round';
     this.ctx.beginPath();
-    this.ctx.moveTo(from.x, from.y);
-    this.ctx.lineTo(to.x, to.y);
+    this.ctx.moveTo(from.x * scale, from.y * scale);
+    this.ctx.lineTo(to.x * scale, to.y * scale);
     this.ctx.stroke();
   }
 
@@ -205,9 +207,10 @@ export class AppComponent implements OnInit, AfterViewInit {
     if (!this.ctx) {
       return;
     }
+    const scale = this.deviceScale;
     this.ctx.fillStyle = color;
     this.ctx.beginPath();
-    this.ctx.arc(point.x, point.y, thickness / 2, 0, Math.PI * 2);
+    this.ctx.arc(point.x * scale, point.y * scale, (thickness / 2) * scale, 0, Math.PI * 2);
     this.ctx.fill();
   }
 
@@ -222,13 +225,13 @@ export class AppComponent implements OnInit, AfterViewInit {
   private resizeCanvas(): void {
     const canvas = this.canvasRef.nativeElement;
     const rect = canvas.getBoundingClientRect();
-    const ratio = window.devicePixelRatio || 1;
-    canvas.width = rect.width * ratio;
-    canvas.height = rect.height * ratio;
+    this.deviceScale = window.devicePixelRatio || 1;
+    canvas.width = rect.width * this.deviceScale;
+    canvas.height = rect.height * this.deviceScale;
     if (!this.ctx) {
       return;
     }
-    this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.clearCanvas();
   }
 
@@ -237,10 +240,9 @@ export class AppComponent implements OnInit, AfterViewInit {
       return;
     }
     const canvas = this.canvasRef.nativeElement;
-    const rect = canvas.getBoundingClientRect();
-    this.ctx.clearRect(0, 0, rect.width, rect.height);
+    this.ctx.clearRect(0, 0, canvas.width, canvas.height);
     this.ctx.fillStyle = CANVAS_BG;
-    this.ctx.fillRect(0, 0, rect.width, rect.height);
+    this.ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
   private getStrokeColor(): string {

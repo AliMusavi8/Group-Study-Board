@@ -16,3 +16,10 @@ frontend/pnpm-debug.log*
 
 # OS
 .DS_Store
+
+# Docker
+docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/
