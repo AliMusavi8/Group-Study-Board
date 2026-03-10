@@ -37,6 +37,9 @@ export type ServerMessage = SnapshotMessage | EventMessage | ErrorMessage;
 const API_BASE = (window as any).GSB_API_BASE || 'http://localhost:8080';
 const WS_BASE = API_BASE.replace(/^http/, 'ws');
 
+import { Injectable } from '@angular/core';
+
+@Injectable({ providedIn: 'root' })
 export class WsService {
   private ws?: WebSocket;
   private listeners: Array<(msg: ServerMessage) => void> = [];
