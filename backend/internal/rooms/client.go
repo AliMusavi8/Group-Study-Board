@@ -129,7 +129,7 @@ func (c *Client) sendError(message string) error {
 
 func isAllowedType(t string) bool {
 	switch t {
-	case "strokeStart", "strokeMove", "strokeEnd":
+	case "strokeStart", "strokeMove", "strokeEnd", "clear":
 		return true
 	default:
 		return false

@@ -1,9 +1,10 @@
-import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WsService, ClientStrokeEvent, Point, ServerMessage, StrokeEvent } from './ws.service';
 
 const CANVAS_BG = '#f5f1e8';
+const ERASER_SCALE = 3.5;
 
 type Tool = 'pen' | 'eraser';
 
@@ -14,7 +15,7 @@ type Tool = 'pen' | 'eraser';
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
-export class AppComponent implements OnInit, AfterViewInit {
+export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
 
   roomInput = '';
@@ -24,6 +25,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   color = '#1f2937';
   thickness = 3;
   tool: Tool = 'pen';
+  touchpadDraw = false;
 
   private ctx?: CanvasRenderingContext2D;
   private drawing = false;
@@ -31,6 +33,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   private lastPointByClient = new Map<string, Point>();
   private clientId = this.createClientId();
   private deviceScale = 1;
+  private resizeObserver?: ResizeObserver;
 
   constructor(private ws: WsService) {
     this.ws.onMessage((msg) => this.handleServerMessage(msg));
@@ -51,6 +54,15 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
     this.ctx = ctx;
     this.resizeCanvas();
+    requestAnimationFrame(() => this.resizeCanvas());
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => this.resizeCanvas());
+      this.resizeObserver.observe(canvas);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
   }
 
   @HostListener('window:resize')
@@ -98,33 +110,38 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   onPointerDown(event: PointerEvent): void {
-    if (!this.ctx || !this.roomId) {
+    if (!this.ctx) {
       return;
     }
-    this.drawing = true;
+    this.canvasRef.nativeElement.setPointerCapture?.(event.pointerId);
     const point = this.getPoint(event);
-    this.lastPoint = point;
-    this.drawPoint(point, this.getStrokeColor());
-    this.sendEvent({ type: 'strokeStart', point });
+    this.startStroke(point);
   }
 
   onPointerMove(event: PointerEvent): void {
-    if (!this.drawing || !this.ctx || !this.roomId || !this.lastPoint) {
+    if (!this.ctx) {
+      return;
+    }
+    if (!this.drawing) {
+      if (this.shouldAutoStart(event)) {
+        const point = this.getPoint(event);
+        this.startStroke(point);
+      }
+      return;
+    }
+    if (!this.lastPoint) {
       return;
     }
     const point = this.getPoint(event);
-    this.drawLine(this.lastPoint, point, this.getStrokeColor(), this.thickness);
+    const thickness = this.getEffectiveThickness();
+    this.drawLine(this.lastPoint, point, this.getStrokeColor(), thickness);
     this.lastPoint = point;
     this.sendEvent({ type: 'strokeMove', point });
   }
 
-  onPointerUp(): void {
-    if (!this.drawing) {
-      return;
-    }
-    this.drawing = false;
-    this.lastPoint = undefined;
-    this.sendEvent({ type: 'strokeEnd' });
+  onPointerUp(event: PointerEvent): void {
+    this.canvasRef.nativeElement.releasePointerCapture?.(event.pointerId);
+    this.endStroke();
   }
 
   private handleServerMessage(message: ServerMessage): void {
@@ -156,7 +173,14 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
     const color = event.tool === 'eraser' ? CANVAS_BG : (event.color || this.color);
-    const thickness = event.thickness || this.thickness;
+    const tool: Tool = event.tool === 'eraser' ? 'eraser' : 'pen';
+    const thickness = event.thickness ?? this.getEffectiveThickness(this.thickness, tool);
+
+    if (event.type === 'clear') {
+      this.clearCanvas();
+      this.lastPointByClient.clear();
+      return;
+    }
 
     if (event.type === 'strokeStart' && event.point) {
       this.lastPointByClient.set(event.clientId, event.point);
@@ -179,11 +203,16 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   private sendEvent(event: ClientStrokeEvent): void {
+    if (!this.roomId) {
+      return;
+    }
+    const tool: Tool = event.tool ?? this.tool;
+    const thickness = this.getEffectiveThickness(event.thickness ?? this.thickness, tool);
     const payload: ClientStrokeEvent = {
       ...event,
       color: this.color,
-      thickness: this.thickness,
-      tool: this.tool
+      thickness,
+      tool
     };
     this.ws.send(payload);
   }
@@ -215,6 +244,9 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   private getPoint(event: PointerEvent): Point {
+    if (Number.isFinite(event.offsetX) && Number.isFinite(event.offsetY)) {
+      return { x: event.offsetX, y: event.offsetY };
+    }
     const rect = this.canvasRef.nativeElement.getBoundingClientRect();
     return {
       x: event.clientX - rect.left,
@@ -249,6 +281,39 @@ export class AppComponent implements OnInit, AfterViewInit {
     return this.tool === 'eraser' ? CANVAS_BG : this.color;
   }
 
+  private getEffectiveThickness(thickness = this.thickness, tool: Tool = this.tool): number {
+    return tool === 'eraser' ? thickness * ERASER_SCALE : thickness;
+  }
+
+  private startStroke(point: Point): void {
+    this.drawing = true;
+    this.lastPoint = point;
+    this.drawPoint(point, this.getStrokeColor(), this.getEffectiveThickness());
+    this.sendEvent({ type: 'strokeStart', point });
+  }
+
+  private endStroke(): void {
+    if (!this.drawing) {
+      return;
+    }
+    this.drawing = false;
+    this.lastPoint = undefined;
+    this.sendEvent({ type: 'strokeEnd' });
+  }
+
+  private shouldAutoStart(event: PointerEvent): boolean {
+    if (!this.touchpadDraw) {
+      return false;
+    }
+    if (event.buttons && event.buttons !== 0) {
+      return false;
+    }
+    if (event.pointerType && event.pointerType !== 'mouse') {
+      return false;
+    }
+    return true;
+  }
+
   private createClientId(): string {
     if (crypto && 'randomUUID' in crypto) {
       return crypto.randomUUID();
@@ -266,5 +331,19 @@ export class AppComponent implements OnInit, AfterViewInit {
     params.set('room', roomId);
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState({}, '', newUrl);
+  }
+
+  clearBoard(): void {
+    this.clearCanvas();
+    this.lastPoint = undefined;
+    this.lastPointByClient.clear();
+    this.sendEvent({ type: 'clear' });
+  }
+
+  toggleTouchpadDraw(): void {
+    this.touchpadDraw = !this.touchpadDraw;
+    if (!this.touchpadDraw) {
+      this.endStroke();
+    }
   }
 }

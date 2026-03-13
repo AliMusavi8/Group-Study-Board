@@ -1,7 +1,7 @@
 export type Point = { x: number; y: number };
 
 export type ClientStrokeEvent = {
-  type: 'strokeStart' | 'strokeMove' | 'strokeEnd';
+  type: 'strokeStart' | 'strokeMove' | 'strokeEnd' | 'clear';
   point?: Point;
   color?: string;
   thickness?: number;
