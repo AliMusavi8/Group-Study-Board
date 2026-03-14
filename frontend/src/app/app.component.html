@@ -68,13 +68,6 @@
               </select>
             </div>
             <button
-              class="rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide"
-              [ngClass]="touchpadDraw ? 'bg-emerald-500 text-white shadow-soft' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'"
-              (click)="toggleTouchpadDraw()"
-            >
-              Touchpad Draw {{ touchpadDraw ? 'On' : 'Off' }}
-            </button>
-            <button
               class="rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide border border-rose-200 text-rose-600 hover:bg-rose-50"
               (click)="clearBoard()"
             >
@@ -89,6 +82,7 @@
             <li>Rooms auto-expire after inactivity.</li>
             <li>Server orders strokes before broadcast.</li>
             <li>Share the room link to invite others.</li>
+            <li>Hold <kbd class="rounded px-1 border border-slate-300 bg-slate-100 font-bold">Left Ctrl</kbd> to draw without clicking — useful on touchpads.</li>
           </ul>
         </div>
       </div>
@@ -99,6 +93,7 @@
           class="w-full h-full touch-none"
           (pointerdown)="onPointerDown($event)"
           (pointermove)="onPointerMove($event)"
+          (mousemove)="onCanvasMouseMove($event)"
           (pointerup)="onPointerUp($event)"
           (pointerleave)="onPointerUp($event)"
           (pointercancel)="onPointerUp($event)"

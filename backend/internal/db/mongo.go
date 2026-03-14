@@ -39,14 +39,16 @@ func NewStore(ctx context.Context, cfg config.Config) (*Store, error) {
 		boards:    db.Collection("boards"),
 	}
 
-	if err := store.ensureIndexes(ctx); err != nil {
+	if err := store.ensureIndexes(ctx, int32(cfg.RoomTTL.Seconds())); err != nil {
 		return nil, err
 	}
 
 	return store, nil
 }
 
-func (s *Store) ensureIndexes(ctx context.Context) error {
+func (s *Store) ensureIndexes(ctx context.Context, ttlSeconds int32) error {
+	ttlOption := options.Index().SetExpireAfterSeconds(ttlSeconds)
+
 	_, err := s.events.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{
 			Keys: bson.D{{Key: "roomId", Value: 1}, {Key: "createdAt", Value: 1}},
@@ -54,21 +56,37 @@ func (s *Store) ensureIndexes(ctx context.Context) error {
 		{
 			Keys: bson.D{{Key: "roomId", Value: 1}, {Key: "seq", Value: 1}},
 		},
+		{
+			Keys:    bson.D{{Key: "createdAt", Value: 1}},
+			Options: ttlOption,
+		},
 	})
 	if err != nil {
 		return err
 	}
 
-	_, err = s.snapshots.Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys: bson.D{{Key: "roomId", Value: 1}, {Key: "createdAt", Value: -1}},
+	_, err = s.snapshots.Indexes().CreateMany(ctx, []mongo.IndexModel{
+		{
+			Keys: bson.D{{Key: "roomId", Value: 1}, {Key: "createdAt", Value: -1}},
+		},
+		{
+			Keys:    bson.D{{Key: "createdAt", Value: 1}},
+			Options: ttlOption,
+		},
 	})
 	if err != nil {
 		return err
 	}
 
-	_, err = s.boards.Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys: bson.D{{Key: "roomId", Value: 1}},
-		Options: options.Index().SetUnique(true),
+	_, err = s.boards.Indexes().CreateMany(ctx, []mongo.IndexModel{
+		{
+			Keys:    bson.D{{Key: "roomId", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		{
+			Keys:    bson.D{{Key: "createdAt", Value: 1}},
+			Options: ttlOption,
+		},
 	})
 	return err
 }

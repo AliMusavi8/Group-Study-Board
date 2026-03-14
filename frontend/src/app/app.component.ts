@@ -25,7 +25,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   color = '#1f2937';
   thickness = 3;
   tool: Tool = 'pen';
-  touchpadDraw = false;
+
+  private ctrlDrawing = false;  // true while Left Ctrl is held and used as a draw trigger
 
   private ctx?: CanvasRenderingContext2D;
   private drawing = false;
@@ -122,14 +123,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.ctx) {
       return;
     }
-    if (!this.drawing) {
-      if (this.shouldAutoStart(event)) {
-        const point = this.getPoint(event);
-        this.startStroke(point);
-      }
-      return;
-    }
-    if (!this.lastPoint) {
+    if (!this.drawing || !this.lastPoint) {
       return;
     }
     const point = this.getPoint(event);
@@ -301,17 +295,57 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.sendEvent({ type: 'strokeEnd' });
   }
 
-  private shouldAutoStart(event: PointerEvent): boolean {
-    if (!this.touchpadDraw) {
-      return false;
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    // Left Ctrl acts as a virtual "mouse button" for touchpad drawing.
+    // Holding it starts a stroke at the current cursor position on the canvas.
+    if (event.code !== 'ControlLeft' || this.ctrlDrawing) {
+      return;
     }
-    if (event.buttons && event.buttons !== 0) {
-      return false;
+    const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+      return;
     }
-    if (event.pointerType && event.pointerType !== 'mouse') {
-      return false;
+    this.ctrlDrawing = true;
+    // Synthesise a strokeStart at wherever the pointer currently is.
+    // We rely on the next pointermove to get the real position;
+    // store the canvas centre as a safe fallback start point.
+    if (!this.drawing && this.ctx) {
+      const canvas = this.canvasRef.nativeElement;
+      const rect = canvas.getBoundingClientRect();
+      // Use the last known mouse position if available, else canvas centre.
+      const x = this.lastCtrlPoint?.x ?? rect.width / 2;
+      const y = this.lastCtrlPoint?.y ?? rect.height / 2;
+      this.startStroke({ x, y });
     }
-    return true;
+  }
+
+  @HostListener('window:keyup', ['$event'])
+  onKeyUp(event: KeyboardEvent): void {
+    if (event.code !== 'ControlLeft') {
+      return;
+    }
+    this.ctrlDrawing = false;
+    this.endStroke();
+  }
+
+  // Tracks the last cursor position on the canvas so Ctrl+hold can start
+  // a stroke there rather than at the canvas centre.
+  private lastCtrlPoint?: Point;
+
+  onCanvasMouseMove(event: MouseEvent): void {
+    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
+    this.lastCtrlPoint = {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top
+    };
+    if (this.ctrlDrawing && this.drawing && this.lastPoint) {
+      const point = this.lastCtrlPoint;
+      const thickness = this.getEffectiveThickness();
+      this.drawLine(this.lastPoint, point, this.getStrokeColor(), thickness);
+      this.lastPoint = point;
+      this.sendEvent({ type: 'strokeMove', point });
+    }
   }
 
   private createClientId(): string {
@@ -338,12 +372,5 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.lastPoint = undefined;
     this.lastPointByClient.clear();
     this.sendEvent({ type: 'clear' });
-  }
-
-  toggleTouchpadDraw(): void {
-    this.touchpadDraw = !this.touchpadDraw;
-    if (!this.touchpadDraw) {
-      this.endStroke();
-    }
   }
 }
