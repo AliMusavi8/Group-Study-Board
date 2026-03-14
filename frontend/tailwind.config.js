@@ -3,13 +3,19 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        parchment: "#f5f1e8",
-        ink: "#1f2937",
-        ember: "#f97316",
-        ocean: "#0f172a"
+        canvas:         "#f7f4ee",
+        ink:            "#1a2e1f",
+        accent:         "#16a34a",
+        "accent-hover": "#15803d",
+        "accent-light": "#dcfce7",
+        muted:          "#64748b",
+        danger:         "#dc2626",
+        "danger-hover": "#b91c1c",
+        border:         "#bbf7d0",
       },
       boxShadow: {
-        soft: "0 12px 40px rgba(15, 23, 42, 0.12)"
+        soft:   "0 4px 24px rgba(0, 0, 0, 0.08)",
+        canvas: "0 8px 48px rgba(0, 0, 0, 0.15)",
       }
     }
   },

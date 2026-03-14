@@ -5,3 +5,11 @@
 canvas {
   cursor: crosshair;
 }
+
+/* hide scrollbar on the left panel if content overflows */
+.gsb-sidebar {
+  scrollbar-width: none;
+}
+.gsb-sidebar::-webkit-scrollbar {
+  display: none;
+}
