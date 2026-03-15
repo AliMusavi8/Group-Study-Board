@@ -1,8 +1,8 @@
 <div class="min-h-screen overflow-hidden" style="background-color: #6a994e;">
-  <div class="max-w-6xl mx-auto h-screen px-6 py-6 grid grid-rows-[auto_1fr] gap-4">
+  <div #mainContainer class="max-w-6xl mx-auto h-screen px-6 py-6 grid grid-rows-[auto_1fr] gap-4 relative">
 
     <!-- ── Header ──────────────────────────────────────────────────────────── -->
-    <div class="grid grid-cols-1 lg:grid-cols-[340px_1fr] items-center gap-4">
+    <div #headerRow class="grid grid-cols-1 lg:grid-cols-[340px_1fr] items-center gap-4">
       <div #badgeContainer
         class="relative inline-flex items-center justify-center bg-slate-100 rounded-full px-8 py-4 justify-self-start z-10">
         <svg class="absolute top-0 left-0 w-full h-full pointer-events-none z-20"
@@ -89,7 +89,8 @@
               <!-- Size -->
               <div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-ink">Size</span>
-                <input type="range" min="1" max="12" [ngModel]="toolThickness" (ngModelChange)="toolThickness = $event" class="accent-accent w-24" />
+                <input type="range" min="1" max="12" [ngModel]="toolThickness" (ngModelChange)="toolThickness = $event"
+                  class="accent-accent w-24" />
                 <span class="text-xs font-black text-ink w-4 text-right">{{ toolThickness }}</span>
               </div>
             </div>
@@ -147,8 +148,7 @@
             class="block px-4 py-2.5 bg-[#bc4749] border-b-2 border-black text-xs font-black uppercase tracking-widest text-white m-0">Notes</label>
           <div class="p-4 flex flex-col gap-2">
             <ul class="text-xs text-ink font-semibold space-y-1 list-disc list-inside leading-relaxed">
-              <li>Rooms auto-expire after inactivity.</li>
-              <li>Server orders strokes before broadcast.</li>
+              <li>Start your Group Study session quickly.</li>
               <li>Share the room link to invite others.</li>
               <li>Hold <kbd class="rounded px-1 border border-slate-300 bg-slate-100 font-semibold text-ink">Left
                   Ctrl</kbd> to draw without clicking — useful on touchpads.</li>
@@ -158,37 +158,48 @@
 
       </div><!-- /sidebar -->
 
-      <!-- Canvas -->
-      <div class="relative min-h-0 h-full">
-        <div
-          class="w-full h-full bg-slate-100 rounded-3xl shadow-[0_8px_48px_rgba(0,0,0,0.15)] overflow-hidden border-2 border-black canvas-grid">
-          <canvas #canvas class="w-full h-full touch-none" (pointerdown)="onPointerDown($event)"
-            (pointermove)="onPointerMove($event)" (mousemove)="onCanvasMouseMove($event)"
-            (pointerup)="onPointerUp($event)" (pointerleave)="onPointerUp($event)"
-            (pointercancel)="onPointerUp($event)"></canvas>
-        </div>
-        <!-- Fullscreen button -->
-        <button
-          class="absolute bottom-3 right-3 z-10 p-1.5 rounded-lg bg-black/70 hover:bg-black text-white transition-colors"
-          title="Toggle fullscreen" (click)="toggleFullscreen()">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <ng-container *ngIf="!isFullscreen">
-              <polyline points="15 3 21 3 21 9" />
-              <polyline points="9 21 3 21 3 15" />
-              <line x1="21" y1="3" x2="14" y2="10" />
-              <line x1="3" y1="21" x2="10" y2="14" />
-            </ng-container>
-            <ng-container *ngIf="isFullscreen">
-              <polyline points="8 3 3 3 3 8" />
-              <polyline points="21 16 21 21 16 21" />
-              <line x1="3" y1="3" x2="10" y2="10" />
-              <line x1="21" y1="21" x2="14" y2="14" />
-            </ng-container>
-          </svg>
-        </button>
-      </div>
+      <!-- Canvas placeholder — keeps the grid column alive while the canvas panel is absolute -->
+      <div #canvasPlaceholder class="min-h-0 h-full"></div>
 
     </div>
+
+    <!-- Blur backdrop (fixed = covers full viewport, not just the container) -->
+    <div class="fixed inset-0 pointer-events-none z-40"
+      [style.opacity]="isMaximized ? '1' : '0'"
+      [style.backdropFilter]="isMaximized ? 'blur(5px)' : 'none'"
+      style="background: rgba(0,0,0,0.22); transition: opacity 0.5s ease, backdrop-filter 0.5s ease;">
+    </div>
+
+    <!-- Canvas panel — always absolute, transitions between normal and maximized positions -->
+    <div class="canvas-panel z-50 bg-slate-100 rounded-3xl shadow-[0_8px_48px_rgba(0,0,0,0.15)] border-2 border-black canvas-grid overflow-hidden"
+      [class.canvas-panel-animated]="canvasPanelAnimated"
+      [ngStyle]="canvasPanelStyle">
+      <canvas #canvas class="w-full h-full touch-none" (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)" (mousemove)="onCanvasMouseMove($event)"
+        (pointerup)="onPointerUp($event)" (pointerleave)="onPointerUp($event)"
+        (pointercancel)="onPointerUp($event)"></canvas>
+
+      <!-- Maximize button -->
+      <button
+        class="absolute bottom-3 right-3 z-10 p-1.5 rounded-lg bg-black/70 hover:bg-black text-white transition-colors"
+        title="Toggle maximize" (click)="toggleMaximize()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <ng-container *ngIf="!isMaximized">
+            <polyline points="15 3 21 3 21 9" />
+            <polyline points="9 21 3 21 3 15" />
+            <line x1="21" y1="3" x2="14" y2="10" />
+            <line x1="3" y1="21" x2="10" y2="14" />
+          </ng-container>
+          <ng-container *ngIf="isMaximized">
+            <polyline points="8 3 3 3 3 8" />
+            <polyline points="21 16 21 21 16 21" />
+            <line x1="3" y1="3" x2="10" y2="10" />
+            <line x1="21" y1="21" x2="14" y2="14" />
+          </ng-container>
+        </svg>
+      </button>
+    </div>
+
   </div>
 </div>

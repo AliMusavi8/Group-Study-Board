@@ -1,70 +1,85 @@
 # Group Study Board
 
-A real-time collaborative whiteboard for studying with friends. Built with Go (Gin + WebSockets), MongoDB, and Angular with Tailwind CSS.
+<p align="center">
+  <img src="frontend/src/assets/logo.png" alt="Group Study Board Logo" width="200"/>
+</p>
 
-## Project Structure
+Group Study Board is built around a simple idea: starting a study session with friends should take seconds, not minutes. No accounts, no sign-ups, no configuration — just open the site, create a room, share the link, and everyone is on the same whiteboard instantly.
 
-- `backend/` Go API + WebSocket server
-- `frontend/` Angular client
+---
 
-## Prerequisites
+## Tech Stack
 
-- Go 1.25.3+
-- Node.js 24.13.1 LTS+
-- MongoDB 8.0+ (latest self-managed LTS; 8.1 is Atlas-only rapid release)
+| Layer     | Technology                                      |
+|-----------|-------------------------------------------------|
+| Backend   | Go 1.25, Gin, WebSockets   |
+| Database  | MongoDB 8.0                                     |
+| Frontend  | Angular 19, TypeScript                          |
+| Styling   | Tailwind CSS                                    |
+| Server    | Nginx (production static serving)               |
+| Container | Docker, Docker Compose                          |
 
-## Backend Setup
+---
 
-1. Start MongoDB locally (default `mongodb://localhost:27017`).
-2. Configure environment variables:
+## Features
 
-```bash
-cp backend/.env.example backend/.env
-```
+- **Real-time drawing** — strokes are broadcast to all participants with server-side ordering for consistency
+- **Room system** — create or join rooms by ID; share a deep-link to invite others
+- **Snapshots** — periodic MongoDB snapshots speed up late-joining participants
+- **Rate limiting** — per-connection event throttling to prevent abuse
 
-3. Run the server:
+---
 
-```bash
-cd backend
-# go mod tidy
-# go run ./cmd/server
-```
-
-## Docker Setup
+## Quick Start (Docker)
 
 ```bash
 docker compose up --build
 ```
 
-Services:
-- Frontend: http://localhost:4200
-- Backend: http://localhost:8080
-- MongoDB: mongodb://localhost:27017
+| Service  | URL                         |
+|----------|-----------------------------|
+| Frontend | http://localhost:4200       |
+| Backend  | http://localhost:8080       |
+| MongoDB  | mongodb://localhost:27017   |
 
-## Frontend Setup
+---
+
+## Manual Setup
+
+### Backend (Go 1.25+)
+
+```bash
+cd backend
+cp .env.example .env   # configure environment variables
+go mod tidy
+go run ./cmd/server
+```
+
+### Frontend (Node 24 LTS)
 
 ```bash
 cd frontend
 npm install
-npm run start
+npm run start          # dev server at http://localhost:4200
 ```
 
-The app will be available at `http://localhost:4200`.
+---
 
-## Environment Variables (Backend)
+## Project Structure
 
-- `PORT` (default `8080`)
-- `MONGODB_URI` (default `mongodb://localhost:27017`)
-- `DATABASE_NAME` (default `group_study_board`)
-- `CORS_ORIGIN` (default `http://localhost:4200`)
-- `ROOM_TTL_MINUTES` (default `60`)
-- `MAX_PARTICIPANTS` (default `24`)
-- `RATE_LIMIT_PER_SEC` (default `60`)
-- `RATE_LIMIT_BURST` (default `120`)
-- `SNAPSHOT_EVERY` (default `200`)
+```
+.
+├── backend/
+│   ├── cmd/server/     # Entry point
+│   └── internal/       # Handlers, WebSocket hub, MongoDB store
+├── frontend/
+│   └── src/app/        # Angular component, canvas logic, WebSocket service
+└── docker-compose.yml
+```
+
+---
 
 ## Notes
 
-- The server is authoritative for event ordering.
-- Snapshots are periodically created in MongoDB to speed up late-join loads.
-- Chat, shapes, and undo/redo are intentionally excluded from v1.
+- This is an MVP so there might be bugs.
+- باقی جیو

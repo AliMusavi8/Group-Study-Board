@@ -18,6 +18,9 @@ type Tool = 'pen' | 'eraser';
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('badgeContainer', { static: true }) badgeRef!: ElementRef<HTMLElement>;
+  @ViewChild('mainContainer', { static: true }) mainContainerRef!: ElementRef<HTMLElement>;
+  @ViewChild('headerRow',      { static: true }) headerRowRef!: ElementRef<HTMLElement>;
+  @ViewChild('canvasPlaceholder', { static: true }) canvasPlaceholderRef!: ElementRef<HTMLElement>;
 
   badgeW = 0;
   badgeH = 0;
@@ -34,7 +37,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   eraserThickness = 6;
   tool: Tool = 'pen';
 
-  isFullscreen = false;
+  isMaximized = false;
+  canvasPanelAnimated = false;
+  canvasPanelStyle: { [key: string]: string } = {};
 
   private ctrlDrawing = false;  // true while Left Ctrl is held and used as a draw trigger
 
@@ -79,13 +84,19 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       this.badgeResizeObserver.observe(this.badgeRef.nativeElement);
     }
 
-    document.addEventListener('fullscreenchange', this.onFullscreenChange);
+    // Set initial canvas panel position (no animation on first render)
+    this.updateCanvasPanelPosition();
+    requestAnimationFrame(() => {
+      this.canvasPanelAnimated = true; // enable CSS transitions from now on
+    });
+
+    document.addEventListener('keydown', this.onEscKey);
   }
 
   ngOnDestroy(): void {
     this.resizeObserver?.disconnect();
     this.badgeResizeObserver?.disconnect();
-    document.removeEventListener('fullscreenchange', this.onFullscreenChange);
+    document.removeEventListener('keydown', this.onEscKey);
   }
 
   /** Getter/setter so the slider always reads/writes the active tool's thickness */
@@ -114,19 +125,56 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.thickness = t === 'pen' ? this.penThickness : this.eraserThickness;
   }
 
-  toggleFullscreen(): void {
-    const el = document.documentElement;
-    if (!document.fullscreenElement) {
-      el.requestFullscreen?.();
-    } else {
-      document.exitFullscreen?.();
-    }
+  toggleMaximize(): void {
+    this.isMaximized = !this.isMaximized;
+    this.updateCanvasPanelPosition();
   }
 
-  private onFullscreenChange = (): void => {
-    this.isFullscreen = !!document.fullscreenElement;
+  private onEscKey = (e: KeyboardEvent): void => {
+    if (e.key === 'Escape' && this.isMaximized) {
+      this.isMaximized = false;
+      this.updateCanvasPanelPosition();
+    }
   };
 
+  /** Compute and apply the canvas panel's absolute position.
+   *  Normal  → matches the grid placeholder's bounding box.
+   *  Maximized → expands to fill from sidebar-right to container-right,
+   *              vertically from header-mid to a symmetric bottom gap. */
+  private updateCanvasPanelPosition(): void {
+    const container  = this.mainContainerRef.nativeElement;
+    const placeholder = this.canvasPlaceholderRef.nativeElement;
+    const contRect   = container.getBoundingClientRect();
+    const phRect     = placeholder.getBoundingClientRect();
+
+    if (this.isMaximized) {
+      const headerH   = this.headerRowRef.nativeElement.offsetHeight;
+      const pV        = 24;  // py-6  (Tailwind 6 × 4px = 24px)
+      const pH        = 24;  // px-6
+      const sidebarW  = 340; // lg:grid-cols-[340px_1fr]
+      const colGap    = 16;  // gap-4
+      const topOffset = pV + headerH / 2;
+      this.canvasPanelStyle = {
+        top:    topOffset + 'px',
+        left:   (pH + sidebarW + colGap) + 'px',
+        right:  pH + 'px',
+        bottom: topOffset + 'px',
+      };
+    } else {
+      const contW = contRect.width;
+      const contH = contRect.height;
+      const top    = phRect.top  - contRect.top;
+      const left   = phRect.left - contRect.left;
+      const right  = contW - left - phRect.width;
+      const bottom = contH - top  - phRect.height;
+      this.canvasPanelStyle = {
+        top:    top    + 'px',
+        left:   left   + 'px',
+        right:  right  + 'px',
+        bottom: bottom + 'px',
+      };
+    }
+  }
   private measureBadge(): void {
     const el = this.badgeRef.nativeElement;
     this.badgeW = el.offsetWidth;
@@ -147,6 +195,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('window:resize')
   onResize(): void {
     this.resizeCanvas();
+    this.updateCanvasPanelPosition();
   }
 
   async createRoom(): Promise<void> {

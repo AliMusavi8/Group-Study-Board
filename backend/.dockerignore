@@ -1,3 +1,18 @@
+# Secrets & local config
 .env
+
+# Build artifacts
 bin/
+
+# Logs
 *.log
+**/*.log
+
+# Git / IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Docs (not needed in image)
+*.md

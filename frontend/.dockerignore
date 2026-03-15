@@ -1,4 +1,25 @@
+# Dependencies & build output (largest savings)
 node_modules/
 dist/
+
+# Angular build cache
 .angular/
 .cache/
+
+# Env files
+.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Git / IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Docs
+*.md
