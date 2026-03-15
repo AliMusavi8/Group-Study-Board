@@ -3,9 +3,15 @@
 
     <!-- ── Header ──────────────────────────────────────────────────────────── -->
     <div class="grid grid-cols-1 lg:grid-cols-[340px_1fr] items-center gap-4">
-      <div class="animated-border-badge justify-self-start z-10">
-        <h1 class="text-6xl tracking-tight text-[#bc4749] whitespace-nowrap leading-none m-0 relative z-30"
-          style="font-family: 'Cherry Bomb One', cursive; font-weight: 400; text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 6px 6px 0px #000;">
+      <div #badgeContainer
+        class="relative inline-flex items-center justify-center bg-slate-100 rounded-full px-8 py-4 justify-self-start z-10">
+        <svg class="absolute top-0 left-0 w-full h-full pointer-events-none z-20"
+          [attr.viewBox]="'0 0 ' + badgeW + ' ' + badgeH" style="overflow: visible" xmlns="http://www.w3.org/2000/svg">
+          <path [attr.d]="badgePath" fill="none" stroke="#000" [attr.stroke-width]="strokeW" stroke-dasharray="14 14"
+            stroke-linecap="round" class="marching-ants" />
+        </svg>
+        <h1 class="text-6xl tracking-tight text-accent whitespace-nowrap leading-none m-0 relative z-30"
+          style="font-family: 'Cherry Bomb One', cursive; font-weight: 400; transform: translateY(-0.08em); text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 6px 6px 0px #000;">
           Group Study Board</h1>
       </div>
       <div class="flex items-center lg:justify-end">
@@ -30,7 +36,7 @@
 
         <!-- Room card -->
         <div
-          class="bg-white/80 backdrop-blur rounded-2xl shadow-soft flex flex-col border-2 border-black transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden">
+          class="bg-white/80 backdrop-blur rounded-2xl shadow-soft flex flex-col border-2 border-black overflow-hidden">
           <label
             class="block px-4 py-2.5 bg-[#bc4749] border-b-2 border-black text-xs font-black uppercase tracking-widest text-white m-0">Room</label>
           <div class="p-4 flex flex-col gap-3">
@@ -68,7 +74,7 @@
 
         <!-- Tools card -->
         <div
-          class="bg-white/80 backdrop-blur rounded-2xl shadow-soft flex flex-col border-2 border-black transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden">
+          class="bg-white/80 backdrop-blur rounded-2xl shadow-soft flex flex-col border-2 border-black overflow-hidden">
           <label
             class="block px-4 py-2.5 bg-[#bc4749] border-b-2 border-black text-xs font-black uppercase tracking-widest text-white m-0">Tools</label>
           <div class="p-4 flex flex-col gap-3">
@@ -83,8 +89,8 @@
               <!-- Size -->
               <div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-ink">Size</span>
-                <input type="range" min="1" max="12" [(ngModel)]="thickness" class="accent-accent w-24" />
-                <span class="text-xs font-black text-ink w-4 text-right">{{ thickness }}</span>
+                <input type="range" min="1" max="12" [ngModel]="toolThickness" (ngModelChange)="toolThickness = $event" class="accent-accent w-24" />
+                <span class="text-xs font-black text-ink w-4 text-right">{{ toolThickness }}</span>
               </div>
             </div>
 
@@ -93,7 +99,7 @@
               <button
                 class="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold border-2 border-black shadow-[3px_4px_0_#000] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[4px] transition-all"
                 [ngClass]="tool === 'pen' ? 'bg-accent text-white' : 'bg-white text-ink hover:bg-slate-50'"
-                (click)="tool = 'pen'">
+                (click)="switchTool('pen')">
                 <!-- pencil icon -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -104,7 +110,7 @@
               <button
                 class="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold border-2 border-black shadow-[3px_4px_0_#000] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[4px] transition-all"
                 [ngClass]="tool === 'eraser' ? 'bg-accent text-white' : 'bg-white text-ink hover:bg-slate-50'"
-                (click)="tool = 'eraser'">
+                (click)="switchTool('eraser')">
                 <!-- eraser icon -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -136,7 +142,7 @@
 
         <!-- Notes card -->
         <div
-          class="bg-white/80 backdrop-blur rounded-2xl shadow-soft flex flex-col border-2 border-black transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden">
+          class="bg-white/80 backdrop-blur rounded-2xl shadow-soft flex flex-col border-2 border-black overflow-hidden">
           <label
             class="block px-4 py-2.5 bg-[#bc4749] border-b-2 border-black text-xs font-black uppercase tracking-widest text-white m-0">Notes</label>
           <div class="p-4 flex flex-col gap-2">
@@ -153,12 +159,34 @@
       </div><!-- /sidebar -->
 
       <!-- Canvas -->
-      <div
-        class="min-h-0 h-full bg-slate-100 rounded-3xl shadow-[0_8px_48px_rgba(0,0,0,0.15)] overflow-hidden border-2 border-black canvas-grid transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <canvas #canvas class="w-full h-full touch-none" (pointerdown)="onPointerDown($event)"
-          (pointermove)="onPointerMove($event)" (mousemove)="onCanvasMouseMove($event)"
-          (pointerup)="onPointerUp($event)" (pointerleave)="onPointerUp($event)"
-          (pointercancel)="onPointerUp($event)"></canvas>
+      <div class="relative min-h-0 h-full">
+        <div
+          class="w-full h-full bg-slate-100 rounded-3xl shadow-[0_8px_48px_rgba(0,0,0,0.15)] overflow-hidden border-2 border-black canvas-grid">
+          <canvas #canvas class="w-full h-full touch-none" (pointerdown)="onPointerDown($event)"
+            (pointermove)="onPointerMove($event)" (mousemove)="onCanvasMouseMove($event)"
+            (pointerup)="onPointerUp($event)" (pointerleave)="onPointerUp($event)"
+            (pointercancel)="onPointerUp($event)"></canvas>
+        </div>
+        <!-- Fullscreen button -->
+        <button
+          class="absolute bottom-3 right-3 z-10 p-1.5 rounded-lg bg-black/70 hover:bg-black text-white transition-colors"
+          title="Toggle fullscreen" (click)="toggleFullscreen()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <ng-container *ngIf="!isFullscreen">
+              <polyline points="15 3 21 3 21 9" />
+              <polyline points="9 21 3 21 3 15" />
+              <line x1="21" y1="3" x2="14" y2="10" />
+              <line x1="3" y1="21" x2="10" y2="14" />
+            </ng-container>
+            <ng-container *ngIf="isFullscreen">
+              <polyline points="8 3 3 3 3 8" />
+              <polyline points="21 16 21 21 16 21" />
+              <line x1="3" y1="3" x2="10" y2="10" />
+              <line x1="21" y1="21" x2="14" y2="14" />
+            </ng-container>
+          </svg>
+        </button>
       </div>
 
     </div>

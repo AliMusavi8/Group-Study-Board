@@ -17,6 +17,12 @@ type Tool = 'pen' | 'eraser';
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('badgeContainer', { static: true }) badgeRef!: ElementRef<HTMLElement>;
+
+  badgeW = 0;
+  badgeH = 0;
+  strokeW = 6;
+  private badgeResizeObserver?: ResizeObserver;
 
   roomInput = '';
   roomId = '';
@@ -24,7 +30,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   color = '#1f2937';
   thickness = 3;
+  penThickness = 3;
+  eraserThickness = 6;
   tool: Tool = 'pen';
+
+  isFullscreen = false;
 
   private ctrlDrawing = false;  // true while Left Ctrl is held and used as a draw trigger
 
@@ -60,10 +70,78 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       this.resizeObserver = new ResizeObserver(() => this.resizeCanvas());
       this.resizeObserver.observe(canvas);
     }
+
+    // Measure badge for SVG border
+    this.measureBadge();
+    requestAnimationFrame(() => this.measureBadge());
+    if (typeof ResizeObserver !== 'undefined') {
+      this.badgeResizeObserver = new ResizeObserver(() => this.measureBadge());
+      this.badgeResizeObserver.observe(this.badgeRef.nativeElement);
+    }
+
+    document.addEventListener('fullscreenchange', this.onFullscreenChange);
   }
 
   ngOnDestroy(): void {
     this.resizeObserver?.disconnect();
+    this.badgeResizeObserver?.disconnect();
+    document.removeEventListener('fullscreenchange', this.onFullscreenChange);
+  }
+
+  /** Getter/setter so the slider always reads/writes the active tool's thickness */
+  get toolThickness(): number {
+    return this.tool === 'pen' ? this.penThickness : this.eraserThickness;
+  }
+  set toolThickness(value: number) {
+    this.thickness = value;
+    if (this.tool === 'pen') {
+      this.penThickness = value;
+    } else {
+      this.eraserThickness = value;
+    }
+  }
+
+  /** Switch tool, saving the current slider value first */
+  switchTool(t: Tool): void {
+    // persist current thickness to the current tool before switching
+    if (this.tool === 'pen') {
+      this.penThickness = this.thickness;
+    } else {
+      this.eraserThickness = this.thickness;
+    }
+    this.tool = t;
+    // restore the new tool's thickness
+    this.thickness = t === 'pen' ? this.penThickness : this.eraserThickness;
+  }
+
+  toggleFullscreen(): void {
+    const el = document.documentElement;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  }
+
+  private onFullscreenChange = (): void => {
+    this.isFullscreen = !!document.fullscreenElement;
+  };
+
+  private measureBadge(): void {
+    const el = this.badgeRef.nativeElement;
+    this.badgeW = el.offsetWidth;
+    this.badgeH = el.offsetHeight;
+  }
+
+  /** SVG path for the pill border — starts at top-center so the seam is invisible */
+  get badgePath(): string {
+    const w = this.badgeW;
+    const h = this.badgeH;
+    if (!w || !h) return '';
+    const r = h / 2;
+    // Start at top center, go right along top edge, semicircle right,
+    // go left along bottom edge, semicircle left, close back to start
+    return `M ${w / 2} 0 L ${w - r} 0 A ${r} ${r} 0 0 1 ${w - r} ${h} L ${r} ${h} A ${r} ${r} 0 0 1 ${r} 0 Z`;
   }
 
   @HostListener('window:resize')

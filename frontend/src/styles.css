@@ -76,48 +76,12 @@ body {
   background-size: 28px 28px;
 }
 
-/* ── Animated Border Badge ──────────────────────── */
-.animated-border-badge {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 2rem;
-  border-radius: 9999px;
-  background: #f1f5f9; /* bg-slate-100 */
-  overflow: hidden;
+/* ── Marching-ants animated dashed border ──────── */
+.marching-ants {
+  animation: marchingAnts 1s linear infinite;
 }
 
-/* Spinning conic-gradient layer */
-.animated-border-badge::before {
-  content: '';
-  position: absolute;
-  inset: -50%;
-  background: repeating-conic-gradient(
-    #000 0deg 8deg,
-    transparent 8deg 16deg
-  );
-  animation: rotateBorder 6s linear infinite;
-  z-index: 1;
-}
-
-/* Inner mask — hollows out the center so only the border edge shows */
-.animated-border-badge::after {
-  content: '';
-  position: absolute;
-  inset: 3px;
-  border-radius: 9999px;
-  background: #f1f5f9; /* same as badge bg */
-  z-index: 2;
-}
-
-/* Ensure children (the h1) sit above the pseudo-element layers */
-.animated-border-badge > * {
-  position: relative;
-  z-index: 3;
-}
-
-@keyframes rotateBorder {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+@keyframes marchingAnts {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -28; }
 }
