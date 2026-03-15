@@ -21,6 +21,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('mainContainer', { static: true }) mainContainerRef!: ElementRef<HTMLElement>;
   @ViewChild('headerRow',      { static: true }) headerRowRef!: ElementRef<HTMLElement>;
   @ViewChild('canvasPlaceholder', { static: true }) canvasPlaceholderRef!: ElementRef<HTMLElement>;
+  @ViewChild('sidebar', { static: true }) sidebarRef!: ElementRef<HTMLElement>;
 
   badgeW = 0;
   badgeH = 0;
@@ -137,41 +138,34 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   };
 
-  /** Compute and apply the canvas panel's absolute position.
-   *  Normal  → matches the grid placeholder's bounding box.
-   *  Maximized → expands to fill from sidebar-right to container-right,
-   *              vertically from header-mid to a symmetric bottom gap. */
+  /** Compute and apply the canvas panel's fixed absolute position.
+   *  Normal  → matches the grid placeholder's bounding box exactly.
+   *  Maximized → expands from right edge of sidebar to right edge of viewport.
+   *              Starts vertically from middle of badge, ends with same gap at bottom. */
   private updateCanvasPanelPosition(): void {
-    const container  = this.mainContainerRef.nativeElement;
     const placeholder = this.canvasPlaceholderRef.nativeElement;
-    const contRect   = container.getBoundingClientRect();
-    const phRect     = placeholder.getBoundingClientRect();
+    const phRect = placeholder.getBoundingClientRect();
 
     if (this.isMaximized) {
-      const headerH   = this.headerRowRef.nativeElement.offsetHeight;
-      const pV        = 24;  // py-6  (Tailwind 6 × 4px = 24px)
-      const pH        = 24;  // px-6
-      const sidebarW  = 340; // lg:grid-cols-[340px_1fr]
-      const colGap    = 16;  // gap-4
-      const topOffset = pV + headerH / 2;
+      const badgeRect = this.badgeRef.nativeElement.getBoundingClientRect();
+      
+      // Calculate identical margin for all sides to ensure perfect centering 
+      // and symmetric framing, starting from the middle of the badge.
+      const margin = badgeRect.top + (badgeRect.height / 2);
+
       this.canvasPanelStyle = {
-        top:    topOffset + 'px',
-        left:   (pH + sidebarW + colGap) + 'px',
-        right:  pH + 'px',
-        bottom: topOffset + 'px',
+        top: `${margin}px`,
+        left: `${margin}px`,
+        right: `${margin}px`,
+        bottom: `${margin}px`,
       };
     } else {
-      const contW = contRect.width;
-      const contH = contRect.height;
-      const top    = phRect.top  - contRect.top;
-      const left   = phRect.left - contRect.left;
-      const right  = contW - left - phRect.width;
-      const bottom = contH - top  - phRect.height;
+      // Normal state uses viewport-relative coordinates directly from the placeholder bounding box
       this.canvasPanelStyle = {
-        top:    top    + 'px',
-        left:   left   + 'px',
-        right:  right  + 'px',
-        bottom: bottom + 'px',
+        top: `${phRect.top}px`,
+        left: `${phRect.left}px`,
+        right: `${window.innerWidth - phRect.right}px`,
+        bottom: `${window.innerHeight - phRect.bottom}px`,
       };
     }
   }
