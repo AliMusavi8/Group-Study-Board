@@ -113,3 +113,43 @@ body {
   opacity: 0.4; /* Adjusted slightly so the texture is visible; tweak if needed! */
   mix-blend-mode: multiply;
 }
+
+/* ── Global Loader ────────────────────────────────────────── */
+#global-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease-out;
+}
+
+/* 
+  The wrapper applies the static lighting (drop-shadow). 
+  Because the image rotates inside it, the shadow stays perfectly
+  anchored, creating a gorgeous "rotating cutout on a desk" illusion.
+*/
+.spin-paper-logo-wrapper {
+  filter: drop-shadow(3px 4px 0px #000);
+}
+
+.spin-paper-logo {
+  animation: spinLogo 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  width: 160px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* We could use linear, but a bouncy "flick" spin feels more tactile! Let's do a smooth linear for standard rotation or a bouncy one. The prompt just said "is rotating", so let's stick to an elegant ease or linear. For the cutout illusion, a slight elastic pop feels very "vibe". Actually, let's stick to a solid ease-in-out or infinite linear. */
+@keyframes spinLogo {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
