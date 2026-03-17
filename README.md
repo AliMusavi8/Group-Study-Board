@@ -81,5 +81,5 @@ npm run start          # dev server at http://localhost:4200
 
 ## Notes
 
-- This is an MVP so there might be bugs.
+- This is an MVP so if you find any bugs, feel free to tell me.
 - باقی جیو

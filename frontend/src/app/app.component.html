@@ -1,28 +1,67 @@
-<div class="min-h-screen overflow-hidden" style="background-color: #6a994e;">
-  <div #mainContainer class="max-w-6xl mx-auto h-screen px-6 py-6 grid grid-rows-[auto_1fr] gap-4 relative">
-
+<div
+  class="min-h-screen overflow-hidden relative paper-bg"
+  style="background-color: #6a994e"
+>
+  <div
+    #mainContainer
+    class="max-w-6xl mx-auto h-screen px-6 py-6 grid grid-rows-[auto_1fr] gap-4 relative z-10"
+  >
     <!-- ── Header ──────────────────────────────────────────────────────────── -->
-    <div #headerRow class="grid grid-cols-1 lg:grid-cols-[340px_1fr] items-center gap-4">
-      <div #badgeContainer
-        class="relative inline-flex items-center justify-center bg-slate-100 rounded-full px-8 py-4 justify-self-start z-10">
-        <svg class="absolute top-0 left-0 w-full h-full pointer-events-none z-20"
-          [attr.viewBox]="'0 0 ' + badgeW + ' ' + badgeH" style="overflow: visible" xmlns="http://www.w3.org/2000/svg">
-          <path [attr.d]="badgePath" fill="none" stroke="#000" [attr.stroke-width]="strokeW" stroke-dasharray="14 14"
-            stroke-linecap="round" class="marching-ants" />
+    <div
+      #headerRow
+      class="grid grid-cols-1 lg:grid-cols-[340px_1fr] items-center gap-4"
+    >
+      <div
+        #badgeContainer
+        class="relative inline-flex items-center justify-center bg-slate-100 rounded-full px-8 py-4 justify-self-start z-10"
+      >
+        <svg
+          class="absolute top-0 left-0 w-full h-full pointer-events-none z-20"
+          [attr.viewBox]="'0 0 ' + badgeW + ' ' + badgeH"
+          style="overflow: visible"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            [attr.d]="badgePath"
+            fill="none"
+            stroke="#000"
+            [attr.stroke-width]="strokeW"
+            stroke-dasharray="14 14"
+            stroke-linecap="round"
+            class="marching-ants"
+          />
         </svg>
-        <h1 class="text-6xl tracking-tight text-accent whitespace-nowrap leading-none m-0 relative z-30"
-          style="font-family: 'Cherry Bomb One', cursive; font-weight: 400; transform: translateY(-0.08em); text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 6px 6px 0px #000;">
-          Group Study Board</h1>
+        <h1
+          class="text-6xl tracking-tight text-accent whitespace-nowrap leading-none m-0 relative z-30"
+          style="
+            font-family: &quot;Cherry Bomb One&quot;, cursive;
+            font-weight: 400;
+            transform: translateY(-0.08em);
+            text-shadow:
+              -2px -2px 0 #000,
+              2px -2px 0 #000,
+              -2px 2px 0 #000,
+              2px 2px 0 #000,
+              6px 6px 0px #000;
+          "
+        >
+          Group Study Board
+        </h1>
       </div>
       <div class="flex items-center lg:justify-end">
         <div
-          class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border-2 border-black shadow-[3px_4px_0_#000] text-xs font-bold capitalize text-ink">
-          <span class="status-dot" [ngClass]="{
-              'dot-connected':    status === 'connected',
-              'dot-connecting':   status === 'connecting' || status === 'creating',
-              'dot-error':        status === 'error',
-              'dot-disconnected': status === 'disconnected'
-            }"></span>
+          class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border-2 border-black shadow-[3px_4px_0_#000] text-xs font-bold capitalize text-ink"
+        >
+          <span
+            class="status-dot"
+            [ngClass]="{
+              'dot-connected': status === 'connected',
+              'dot-connecting':
+                status === 'connecting' || status === 'creating',
+              'dot-error': status === 'error',
+              'dot-disconnected': status === 'disconnected',
+            }"
+          ></span>
           {{ status }}
         </div>
       </div>
@@ -30,42 +69,62 @@
 
     <!-- ── Main grid ───────────────────────────────────────────────────────── -->
     <div class="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 min-h-0">
-
       <!-- Left sidebar -->
       <div #sidebar class="gsb-sidebar flex flex-col gap-4 overflow-hidden">
-
         <!-- Room card -->
         <div
-          class="bg-white/80 backdrop-blur rounded-2xl shadow-soft flex flex-col border-2 border-black overflow-hidden">
+          class="bg-white/80 backdrop-blur rounded-2xl shadow-soft flex flex-col border-2 border-black overflow-hidden"
+        >
           <label
-            class="block px-4 py-2.5 bg-[#bc4749] border-b-2 border-black text-xs font-black uppercase tracking-widest text-white m-0">Room</label>
+            class="block px-4 py-2.5 bg-[#bc4749] border-b-2 border-black text-xs font-black uppercase tracking-widest text-white m-0"
+            >Room</label
+          >
           <div class="p-4 flex flex-col gap-3">
             <div class="flex flex-wrap gap-2">
               <input
                 class="flex-1 min-w-[180px] rounded-full border-2 border-black px-4 py-2.5 text-sm font-medium focus:outline-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] bg-white"
-                type="text" placeholder="Enter room ID" [(ngModel)]="roomInput" />
+                type="text"
+                placeholder="Enter room ID"
+                [(ngModel)]="roomInput"
+              />
               <button
                 class="rounded-full px-6 py-2.5 text-sm font-bold bg-accent text-white border-2 border-black shadow-[3px_4px_0_#000] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[4px] transition-all"
-                (click)="joinRoom()">
+                (click)="joinRoom()"
+              >
                 Join
               </button>
               <button
                 class="rounded-full px-6 py-2.5 text-sm font-bold bg-white text-ink border-2 border-black shadow-[3px_4px_0_#000] hover:bg-slate-50 hover:shadow-none hover:translate-x-[3px] hover:translate-y-[4px] transition-all"
-                (click)="createRoom()">
+                (click)="createRoom()"
+              >
                 Create
               </button>
             </div>
             <div class="text-xs text-ink font-semibold">
-              Room: <span class="font-black text-ink">{{ roomId || 'none' }}</span>
+              Room:
+              <span class="font-black text-ink">{{ roomId || "none" }}</span>
             </div>
             <button
               class="self-start flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold bg-white text-ink border-2 border-black shadow-[3px_4px_0_#000] hover:bg-slate-50 hover:shadow-none hover:translate-x-[3px] hover:translate-y-[4px] transition-all mt-1"
-              (click)="copyShareLink()">
+              (click)="copyShareLink()"
+            >
               <!-- link icon -->
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-3.5 h-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+                />
+                <path
+                  d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+                />
               </svg>
               Copy share link
             </button>
@@ -74,24 +133,37 @@
 
         <!-- Tools card -->
         <div
-          class="bg-white/80 backdrop-blur rounded-2xl shadow-soft flex flex-col border-2 border-black overflow-hidden">
+          class="bg-white/80 backdrop-blur rounded-2xl shadow-soft flex flex-col border-2 border-black overflow-hidden"
+        >
           <label
-            class="block px-4 py-2.5 bg-[#bc4749] border-b-2 border-black text-xs font-black uppercase tracking-widest text-white m-0">Tools</label>
+            class="block px-4 py-2.5 bg-[#bc4749] border-b-2 border-black text-xs font-black uppercase tracking-widest text-white m-0"
+            >Tools</label
+          >
           <div class="p-4 flex flex-col gap-3">
-
             <div class="flex flex-wrap gap-4 items-center">
               <!-- Color -->
               <div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-ink">Color</span>
-                <input type="color" [(ngModel)]="color"
-                  class="h-8 w-10 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
+                <input
+                  type="color"
+                  [(ngModel)]="color"
+                  class="h-8 w-10 rounded-lg border border-slate-200 cursor-pointer p-0.5"
+                />
               </div>
               <!-- Size -->
               <div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-ink">Size</span>
-                <input type="range" min="1" max="12" [ngModel]="toolThickness" (ngModelChange)="toolThickness = $event"
-                  class="accent-accent w-24" />
-                <span class="text-xs font-black text-ink w-4 text-right">{{ toolThickness }}</span>
+                <input
+                  type="range"
+                  min="1"
+                  max="12"
+                  [ngModel]="toolThickness"
+                  (ngModelChange)="toolThickness = $event"
+                  class="accent-accent w-24"
+                />
+                <span class="text-xs font-black text-ink w-4 text-right">{{
+                  toolThickness
+                }}</span>
               </div>
             </div>
 
@@ -99,23 +171,51 @@
             <div class="flex items-center gap-3">
               <button
                 class="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold border-2 border-black shadow-[3px_4px_0_#000] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[4px] transition-all"
-                [ngClass]="tool === 'pen' ? 'bg-accent text-white' : 'bg-white text-ink hover:bg-slate-50'"
-                (click)="switchTool('pen')">
+                [ngClass]="
+                  tool === 'pen'
+                    ? 'bg-accent text-white'
+                    : 'bg-white text-ink hover:bg-slate-50'
+                "
+                (click)="switchTool('pen')"
+              >
                 <!-- pencil icon -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-3.5 h-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                 </svg>
                 Pen
               </button>
               <button
                 class="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold border-2 border-black shadow-[3px_4px_0_#000] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[4px] transition-all"
-                [ngClass]="tool === 'eraser' ? 'bg-accent text-white' : 'bg-white text-ink hover:bg-slate-50'"
-                (click)="switchTool('eraser')">
+                [ngClass]="
+                  tool === 'eraser'
+                    ? 'bg-accent text-white'
+                    : 'bg-white text-ink hover:bg-slate-50'
+                "
+                (click)="switchTool('eraser')"
+              >
                 <!-- eraser icon -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-3.5 h-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"
+                  />
                   <path d="M22 21H7" />
                   <path d="m5 11 9 9" />
                 </svg>
@@ -125,10 +225,19 @@
               <!-- Erase All -->
               <button
                 class="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold bg-danger text-white border-2 border-black shadow-[3px_4px_0_#000] hover:bg-danger-hover hover:shadow-none hover:translate-x-[3px] hover:translate-y-[4px] transition-all ml-auto"
-                (click)="clearBoard()">
+                (click)="clearBoard()"
+              >
                 <!-- trash icon -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-3.5 h-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <polyline points="3 6 5 6 21 6" />
                   <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                   <path d="M10 11v6" />
@@ -143,48 +252,82 @@
 
         <!-- Notes card -->
         <div
-          class="bg-white/80 backdrop-blur rounded-2xl shadow-soft flex flex-col border-2 border-black overflow-hidden">
+          class="bg-white/80 backdrop-blur rounded-2xl shadow-soft flex flex-col border-2 border-black overflow-hidden"
+        >
           <label
-            class="block px-4 py-2.5 bg-[#bc4749] border-b-2 border-black text-xs font-black uppercase tracking-widest text-white m-0">Notes</label>
+            class="block px-4 py-2.5 bg-[#bc4749] border-b-2 border-black text-xs font-black uppercase tracking-widest text-white m-0"
+            >Notes</label
+          >
           <div class="p-4 flex flex-col gap-2">
-            <ul class="text-xs text-ink font-semibold space-y-1 list-disc list-inside leading-relaxed">
+            <ul
+              class="text-xs text-ink font-semibold space-y-1 list-disc list-inside leading-relaxed"
+            >
               <li>Start your Group Study session quickly.</li>
               <li>Share the room link to invite others.</li>
-              <li>Hold <kbd class="rounded px-1 border border-slate-300 bg-slate-100 font-semibold text-ink">Left
-                  Ctrl</kbd> to draw without clicking — useful on touchpads.</li>
+              <li>
+                Hold
+                <kbd
+                  class="rounded px-1 border border-slate-300 bg-slate-100 font-semibold text-ink"
+                  >Left Ctrl</kbd
+                >
+                to draw without clicking — useful on touchpads.
+              </li>
             </ul>
           </div>
         </div>
-
-      </div><!-- /sidebar -->
+      </div>
+      <!-- /sidebar -->
 
       <!-- Canvas placeholder — keeps the grid column alive while the canvas panel is absolute -->
       <div #canvasPlaceholder class="min-h-0 h-full"></div>
-
     </div>
 
     <!-- Blur backdrop (fixed = covers full viewport, not just the container) -->
-    <div class="fixed inset-0 pointer-events-none z-40"
+    <div
+      class="fixed inset-0 pointer-events-none z-40"
       [style.opacity]="isMaximized ? '1' : '0'"
       [style.backdropFilter]="isMaximized ? 'blur(5px)' : 'none'"
-      style="background: rgba(0,0,0,0.22); transition: opacity 0.5s ease, backdrop-filter 0.5s ease;">
-    </div>
+      style="
+        background: rgba(0, 0, 0, 0.22);
+        transition:
+          opacity 0.5s ease,
+          backdrop-filter 0.5s ease;
+      "
+    ></div>
 
     <!-- Canvas panel — always absolute, transitions between normal and maximized positions -->
-    <div class="canvas-panel z-50 bg-slate-100 rounded-3xl shadow-[0_8px_48px_rgba(0,0,0,0.15)] border-2 border-black canvas-grid overflow-hidden"
+    <div
+      class="canvas-panel z-50 bg-slate-100 rounded-3xl shadow-[0_8px_48px_rgba(0,0,0,0.15)] border-2 border-black canvas-grid overflow-hidden"
       [class.canvas-panel-animated]="canvasPanelAnimated"
-      [ngStyle]="canvasPanelStyle">
-      <canvas #canvas class="w-full h-full touch-none" (pointerdown)="onPointerDown($event)"
-        (pointermove)="onPointerMove($event)" (mousemove)="onCanvasMouseMove($event)"
-        (pointerup)="onPointerUp($event)" (pointerleave)="onPointerUp($event)"
-        (pointercancel)="onPointerUp($event)"></canvas>
+      [ngStyle]="canvasPanelStyle"
+    >
+      <canvas
+        #canvas
+        class="w-full h-full touch-none"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (mousemove)="onCanvasMouseMove($event)"
+        (pointerup)="onPointerUp($event)"
+        (pointerleave)="onPointerUp($event)"
+        (pointercancel)="onPointerUp($event)"
+      ></canvas>
 
       <!-- Maximize button -->
       <button
         class="absolute bottom-3 right-3 z-10 p-1.5 rounded-lg bg-black/70 hover:bg-black text-white transition-colors"
-        title="Toggle maximize" (click)="toggleMaximize()">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        title="Toggle maximize"
+        (click)="toggleMaximize()"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="w-4 h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <ng-container *ngIf="!isMaximized">
             <polyline points="15 3 21 3 21 9" />
             <polyline points="9 21 3 21 3 15" />
@@ -200,6 +343,5 @@
         </svg>
       </button>
     </div>
-
   </div>
 </div>
