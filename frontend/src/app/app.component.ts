@@ -45,7 +45,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   badgeW = 0;
   badgeH = 0;
   strokeW = 6;
-  private badgeResizeObserver?: ResizeObserver;
+  private layoutObserver?: ResizeObserver;
 
   roomInput = "";
   roomId = "";
@@ -98,12 +98,25 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       this.resizeObserver.observe(canvas);
     }
 
+    // Ensure the positioning recovers gracefully when layout-shifting web fonts finish downloading
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        this.measureBadge();
+        this.updateCanvasPanelPosition();
+      });
+    }
+
     // Measure badge for SVG border
     this.measureBadge();
     requestAnimationFrame(() => this.measureBadge());
     if (typeof ResizeObserver !== "undefined") {
-      this.badgeResizeObserver = new ResizeObserver(() => this.measureBadge());
-      this.badgeResizeObserver.observe(this.badgeRef.nativeElement);
+      // Use one unified observer for elements that dictate layout shifts
+      this.layoutObserver = new ResizeObserver(() => {
+        this.measureBadge();
+        this.updateCanvasPanelPosition();
+      });
+      this.layoutObserver.observe(this.badgeRef.nativeElement);
+      this.layoutObserver.observe(this.canvasPlaceholderRef.nativeElement);
     }
 
     // Set initial canvas panel position (no animation on first render)
@@ -122,7 +135,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.resizeObserver?.disconnect();
-    this.badgeResizeObserver?.disconnect();
+    this.layoutObserver?.disconnect();
     document.removeEventListener("keydown", this.onEscKey);
   }
 
