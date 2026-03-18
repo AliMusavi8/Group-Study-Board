@@ -1,45 +1,49 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Group Study Board</title>
-    <base href="/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/png" href="assets/logo.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&display=swap"
-      rel="stylesheet"
-    />
-    <script>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Group Study Board</title>
+  <base href="/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&display=swap" rel="stylesheet" />
+  <script>
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
       window.GSB_API_BASE = "http://localhost:8080";
+    } else {
+      window.GSB_API_BASE = "https://gsb-backend-p32l.onrender.com"; // <-- INSERT YOUR RENDER URL HERE
+    }
 
-      // Setup global loader timing function
-      window.__loaderStartTime = Date.now();
-      window.__hideGlobalLoader = function () {
-        var loader = document.getElementById("global-loader");
-        if (!loader) return;
-        var elapsed = Date.now() - window.__loaderStartTime;
-        var remaining = Math.max(0, 1500 - elapsed); // Minimum 1.5s rotation
+    // Setup global loader timing function
+    window.__loaderStartTime = Date.now();
+    window.__hideGlobalLoader = function () {
+      var loader = document.getElementById("global-loader");
+      if (!loader) return;
+      var elapsed = Date.now() - window.__loaderStartTime;
+      var remaining = Math.max(0, 1500 - elapsed); // Minimum 1.5s rotation
+      setTimeout(function () {
+        loader.style.opacity = "0";
         setTimeout(function () {
-          loader.style.opacity = "0";
-          setTimeout(function () {
-            loader.remove();
-          }, 500); // Wait for CSS opacity transition
-        }, remaining);
-      };
-    </script>
-  </head>
-  <body class="bg-parchment text-ink">
-    <!-- The Loader Overlay (positioned absolute to cover screen and inherit paper texture) -->
-    <div id="global-loader" class="paper-bg" style="background-color: #6a994e">
-      <!-- The wrapper casts a static down-right shadow, the logo rotates INSIDE it! -->
-      <div class="spin-paper-logo-wrapper">
-        <img src="assets/logo.png" alt="Loading..." class="spin-paper-logo" />
-      </div>
-    </div>
+          loader.remove();
+        }, 500); // Wait for CSS opacity transition
+      }, remaining);
+    };
+  </script>
+</head>
 
-    <app-root></app-root>
-  </body>
+<body class="bg-parchment text-ink">
+  <!-- The Loader Overlay (positioned absolute to cover screen and inherit paper texture) -->
+  <div id="global-loader" class="paper-bg" style="background-color: #6a994e">
+    <!-- The wrapper casts a static down-right shadow, the logo rotates INSIDE it! -->
+    <div class="spin-paper-logo-wrapper">
+      <img src="assets/logo.png" alt="Loading..." class="spin-paper-logo" />
+    </div>
+  </div>
+
+  <app-root></app-root>
+</body>
+
 </html>
