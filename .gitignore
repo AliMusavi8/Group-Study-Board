@@ -1,0 +1,25 @@
+# Go
+backend/bin/
+backend/*.log
+backend/.env
+
+# Node/Angular
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.cache/
+frontend/.env
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# OS
+.DS_Store
+
+# Docker
+docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/

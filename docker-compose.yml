@@ -1,0 +1,39 @@
+services:
+  mongo:
+    image: mongo:8.0
+    container_name: gsb-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build:
+      context: ./backend
+    image: gsb-backend:latest
+    environment:
+      PORT: "8080"
+      MONGODB_URI: "mongodb://mongo:27017"
+      DATABASE_NAME: "group_study_board"
+      CORS_ORIGIN: "http://localhost:4200"
+      ROOM_TTL_MINUTES: "60"
+      MAX_PARTICIPANTS: "24"
+      RATE_LIMIT_PER_SEC: "60"
+      RATE_LIMIT_BURST: "120"
+      SNAPSHOT_EVERY: "200"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./frontend
+    image: gsb-frontend:latest
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:

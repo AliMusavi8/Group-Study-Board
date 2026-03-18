@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+
+canvas {
+  cursor: crosshair;
+}
+
+/* hide scrollbar on the left panel if content overflows */
+.gsb-sidebar {
+  scrollbar-width: none;
+}
+.gsb-sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Canvas panel is always position:fixed — transitions added after first render */
+.canvas-panel {
+  position: fixed;
+}
+
+.canvas-panel-animated {
+  transition:
+    top    0.52s cubic-bezier(0.4, 0, 0.2, 1),
+    left   0.52s cubic-bezier(0.4, 0, 0.2, 1),
+    right  0.52s cubic-bezier(0.4, 0, 0.2, 1),
+    bottom 0.52s cubic-bezier(0.4, 0, 0.2, 1),
+    border-radius 0.52s cubic-bezier(0.4, 0, 0.2, 1);
+}
