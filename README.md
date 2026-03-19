@@ -36,14 +36,6 @@ Group Study Board is built around a simple idea: starting a study session with f
 docker compose up --build
 ```
 
-| Service  | URL                         |
-|----------|-----------------------------|
-| Frontend | http://localhost:4200       |
-| Backend  | http://localhost:8080       |
-| MongoDB  | mongodb://localhost:27017   |
-
----
-
 ## Manual Setup
 
 ### Backend (Go 1.25+)
