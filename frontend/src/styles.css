@@ -107,7 +107,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: url("/assets/white-paper-texture.jpg");
+  background-image: url("assets/white-paper-texture.jpg");
   background-size: cover;
   background-position: center;
   opacity: 0.4; /* Adjusted slightly so the texture is visible; tweak if needed! */
